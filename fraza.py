@@ -90,14 +90,36 @@ def translate_keyboard_layout(text: str) -> str:
     return "".join(layout_map.get(ch, ch) for ch in text)
 
 
-def generate_passphrase(words: List[str], count=4) -> tuple[str, str]:
+def generate_passphrase(
+    words: List[str],
+    count=4,
+    letters=3,
+    is_capitalize: bool = False,
+    is_number: bool = False,
+) -> tuple[str, str]:
     if count > len(words):
         print(f"Error (max {len(words)})")
         sys.exit(1)
+
     selected = random.sample(words, count)
-    phrase = " ".join(selected)
-    # Берём первые 3 буквы каждого слова и переводим раскладку
-    password = "".join(translate_keyboard_layout(word[:3]) for word in selected)
+    phrase_core = " ".join(selected)
+
+    # Добавим число в начало фразы и пароля
+    prefix = str(random.randint(0, 99)) if is_number else ""
+    phrase = f"{prefix} {phrase_core}".strip()
+
+    password_parts = []
+    if is_number:
+        password_parts.append(prefix)
+
+    for word in selected:
+        part = word[:letters]
+        if is_capitalize:
+            part = part.capitalize()
+        password_parts.append(translate_keyboard_layout(part))
+
+    password = "".join(password_parts)
+
     return phrase, password
 
 
@@ -119,10 +141,33 @@ def main():
         default="dict",
         help="Path to the dictionary file (pickle)",
     )
+    parser.add_argument(
+        "-c",
+        "--capitalized",
+        type=bool,
+        default=False,
+        help="Capitalize the first letters of words in a phrase (true|false)",
+    )
+    parser.add_argument(
+        "-l",
+        "--letters",
+        type=int,
+        default=3,
+        help="Number of letters from the words of the phrase in the password (default is 3)",
+    )
+    parser.add_argument(
+        "-n",
+        "--number",
+        type=bool,
+        default=False,
+        help="Add a number to the beginning of a phrase (true|false)",
+    )
 
     args = parser.parse_args()
     words = load_words(args.file)
-    phrase, password = generate_passphrase(words, args.words)
+    phrase, password = generate_passphrase(
+        words, args.words, args.letters, args.capitalized, args.number
+    )
     print(f"Passphrase: {phrase}")
     print(f"Password: {password}")
 
