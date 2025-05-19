@@ -17,7 +17,6 @@ def load_words(path: str) -> List[str]:
         sys.exit(1)
 
 
-# Функция для трансформации русских букв в английскую раскладку (пример)
 def translate_keyboard_layout(text: str) -> str:
     layout_map = {
         "а": "f",
@@ -90,6 +89,26 @@ def translate_keyboard_layout(text: str) -> str:
     return "".join(layout_map.get(ch, ch) for ch in text)
 
 
+def print_table(headers: list[str], rows: list[list[str]]) -> None:
+    # Определяем ширину каждой колонки
+    col_widths = [len(header) for header in headers]
+    for row in rows:
+        for i, cell in enumerate(row):
+            col_widths[i] = max(col_widths[i], len(str(cell)))
+
+    # Функция для форматирования одной строки
+    def format_row(row: list[str]) -> str:
+        return " | ".join(str(cell).ljust(col_widths[i]) for i, cell in enumerate(row))
+
+    # Печатаем заголовки
+    print(format_row(headers))
+    print("-+-".join("-" * width for width in col_widths))
+
+    # Печатаем строки
+    for row in rows:
+        print(format_row(row))
+
+
 def generate_passphrase(
     words: List[str],
     count=4,
@@ -104,8 +123,7 @@ def generate_passphrase(
     selected = random.sample(words, count)
     phrase_core = " ".join(selected)
 
-    # Добавим число в начало фразы и пароля
-    prefix = str(random.randint(0, 99)) if is_number else ""
+    prefix = str(random.randint(10, 99)) if is_number else ""
     phrase = f"{prefix} {phrase_core}".strip()
 
     password_parts = []
@@ -162,14 +180,37 @@ def main():
         default=False,
         help="Add a number to the beginning of a phrase (true|false)",
     )
+    parser.add_argument(
+        "-p",
+        "--passwords",
+        type=int,
+        default=1,
+        help="Number of generated passwords (default is 1)",
+    )
+    parser.add_argument(
+        "-hard",
+        "--hard",
+        type=bool,
+        default=False,
+        help="Generate hard password",
+    )
 
     args = parser.parse_args()
+    if args.hard:
+        args.capitalized = True
+        args.letters = 3
+        args.words = 4
+        args.number = True
+
     words = load_words(args.file)
-    phrase, password = generate_passphrase(
-        words, args.words, args.letters, args.capitalized, args.number
-    )
-    print(f"Passphrase: {phrase}")
-    print(f"Password: {password}")
+    headers = ["ID", "Passphrase", "Password"]
+    data = []
+    for i in range(args.passwords):
+        phrase, password = generate_passphrase(
+            words, args.words, args.letters, args.capitalized, args.number
+        )
+        data += [[i + 1, phrase, password]]
+    print_table(headers, data)
 
 
 if __name__ == "__main__":
