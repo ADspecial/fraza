@@ -1,29 +1,43 @@
-import pickle
-import gzip
 import sys
+import json
+import gzip
+import pymorphy2
+from collections import defaultdict
+
+morph = pymorphy2.MorphAnalyzer()
 
 
-def gendict(txt_path: str, pickle_path: str, use_gzip=True):
+def get_pos(word: str) -> str:
+    parsed = morph.parse(word)[0]
+    return parsed.tag.POS or "UNKN"
+
+
+def gendict(txt_path: str, json_gz_path: str):
+    pos_map = defaultdict(list)
+
     with open(txt_path, encoding="Windows-1251") as f:
-        words = [line.strip() for line in f if line.strip]
+        for line in f:
+            word = line.strip()
+            if not word:
+                continue
+            pos = get_pos(word)
+            pos_map[pos].append(word)
 
-    if use_gzip:
-        with gzip.open(pickle_path, "wb") as f:
-            pickle.dump(words, f)
-    else:
-        with open(pickle_path, "wb") as f:
-            pickle.dump(words, f)
+    # Преобразуем defaultdict в обычный dict
+    result = dict(pos_map)
 
-    print(f"[+] Saved {len(words)} words to {pickle_path}")
+    with gzip.open(json_gz_path, "wt", encoding="utf-8") as gz_out:
+        json.dump(result, gz_out, ensure_ascii=False, indent=2)
+
+    print(f"[+] Saved {sum(len(v) for v in result.values())} words to {json_gz_path}")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: python gendict.py <txt_path> <pickle_path> <use_gzip>")
+    if len(sys.argv) != 3:
+        print("Usage: python gendict.py <txt_path> <json_gz_path>")
         sys.exit(1)
 
     txt_path = sys.argv[1]
-    pickle_path = sys.argv[2]
-    use_gzip = sys.argv[3].lower() in ["true", "1"]
+    json_gz_path = sys.argv[2]
 
-    gendict(txt_path, pickle_path, use_gzip)
+    gendict(txt_path, json_gz_path)

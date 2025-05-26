@@ -3,22 +3,21 @@ import argparse
 import sys
 import random
 import gzip
-import pickle
-from typing import List
+import json
+from typing import Dict, List
 
 
-def load_words(path: str) -> List[str]:
+def load_dict(path: str) -> Dict[str, List[str]]:
     try:
-        with gzip.open(path, "rb") as f:
-            words = pickle.load(f)
-        return words
+        with gzip.open(path, "rt", encoding="utf-8") as f:
+            return json.load(f)
     except Exception as e:
-        print(f"Error load dict: {e}")
+        print(f"Error loading dict: {e}")
         sys.exit(1)
 
 
 def translate_keyboard_layout(text: str) -> str:
-    layout_map = {
+    layout_map = {  # сокращён для читаемости
         "а": "f",
         "б": ",",
         "в": "d",
@@ -90,127 +89,101 @@ def translate_keyboard_layout(text: str) -> str:
 
 
 def print_table(headers: list[str], rows: list[list[str]]) -> None:
-    # Определяем ширину каждой колонки
     col_widths = [len(header) for header in headers]
     for row in rows:
         for i, cell in enumerate(row):
             col_widths[i] = max(col_widths[i], len(str(cell)))
 
-    # Функция для форматирования одной строки
     def format_row(row: list[str]) -> str:
         return " | ".join(str(cell).ljust(col_widths[i]) for i, cell in enumerate(row))
 
-    # Печатаем заголовки
     print(format_row(headers))
     print("-+-".join("-" * width for width in col_widths))
-
-    # Печатаем строки
     for row in rows:
         print(format_row(row))
 
 
-def generate_passphrase(
-    words: List[str],
-    count=4,
-    letters=3,
-    is_capitalize: bool = False,
-    is_number: bool = False,
+def generate_from_template(
+    dictionary: Dict[str, List[str]],
+    template: List[str],
+    letters: int,
+    capitalize: bool,
+    number: bool,
 ) -> tuple[str, str]:
-    if count > len(words):
-        print(f"Error (max {len(words)})")
-        sys.exit(1)
-
-    selected = random.sample(words, count)
-    phrase_core = " ".join(selected)
-
-    prefix = str(random.randint(10, 99)) if is_number else ""
-    phrase = f"{prefix} {phrase_core}".strip()
-
+    phrase_parts = []
     password_parts = []
-    if is_number:
+
+    prefix = str(random.randint(10, 99)) if number else ""
+    if number:
         password_parts.append(prefix)
 
-    for word in selected:
+    for pos in template:
+        if pos not in dictionary or not dictionary[pos]:
+            print(f"Error: part of speech '{pos}' not found or empty")
+            sys.exit(1)
+        word = random.choice(dictionary[pos])
+        phrase_parts.append(word)
+
         part = word[:letters]
-        if is_capitalize:
+        if capitalize:
             part = part.capitalize()
         password_parts.append(translate_keyboard_layout(part))
 
+    phrase = " ".join(phrase_parts)
     password = "".join(password_parts)
-
     return phrase, password
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Password generator with passphrase (fraza)"
-    )
-    parser.add_argument(
-        "-w",
-        "--words",
-        type=int,
-        default=4,
-        help="Number of words in the passphrase (default is 4)",
+        description="Password generator with template support"
     )
     parser.add_argument(
         "-f",
         "--file",
         type=str,
         default="dict",
-        help="Path to the dictionary file (pickle)",
+        required=True,
+        help="Path to .json.gz dictionary",
     )
     parser.add_argument(
-        "-c",
-        "--capitalized",
-        type=bool,
-        default=False,
-        help="Capitalize the first letters of words in a phrase (true|false)",
+        "-t",
+        "--template",
+        type=str,
+        required=True,
+        help="Template (e.g. NOUN-VERB-ADJF)",
     )
     parser.add_argument(
-        "-l",
-        "--letters",
-        type=int,
-        default=3,
-        help="Number of letters from the words of the phrase in the password (default is 3)",
+        "-l", "--letters", type=int, default=3, help="Letters per word in password"
     )
     parser.add_argument(
-        "-n",
-        "--number",
-        type=bool,
-        default=False,
-        help="Add a number to the beginning of a phrase (true|false)",
+        "-n", "--number", action="store_true", help="Add number at beginning"
     )
     parser.add_argument(
-        "-p",
-        "--passwords",
-        type=int,
-        default=1,
-        help="Number of generated passwords (default is 1)",
+        "-c", "--capitalized", action="store_true", help="Capitalize parts"
     )
     parser.add_argument(
-        "-hard",
-        "--hard",
-        type=bool,
-        default=False,
-        help="Generate hard password",
+        "-p", "--passwords", type=int, default=1, help="Number of passwords"
     )
 
     args = parser.parse_args()
-    if args.hard:
-        args.capitalized = True
-        args.letters = 3
-        args.words = 4
-        args.number = True
+    dictionary = load_dict(args.file)
+    template = args.template.strip().upper().split("-")
 
-    words = load_words(args.file)
     headers = ["ID", "Passphrase", "Password"]
-    data = []
+    rows = []
+
     for i in range(args.passwords):
-        phrase, password = generate_passphrase(
-            words, args.words, args.letters, args.capitalized, args.number
+        phrase, password = generate_from_template(
+            dictionary,
+            template,
+            args.letters,
+            args.capitalized,
+            args.number,
         )
-        data += [[i + 1, phrase, password]]
-    print_table(headers, data)
+        rows.append([i + 1, phrase, password])
+
+    print_table(headers, rows)
 
 
 if __name__ == "__main__":
