@@ -2,9 +2,6 @@
 import argparse
 import random
 import json
-import pymorphy2
-
-morph = pymorphy2.MorphAnalyzer()
 
 parser = argparse.ArgumentParser(description="Password generator")
 parser.add_argument(
@@ -24,15 +21,13 @@ parser.add_argument("--wc", "--wildcard", action="store_true", dest="wildcard")
 parser.add_argument("-p", "--passwords", type=int, default=1)
 
 
-def load_dict(path="tagged_words.json"):
+def load_dict(path="tagged_words_full.json"):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def generate_phrase(dictionary, word_count=4):
     base = ["subject", "predicate", "object"]
-
-    result_parts = []
 
     if word_count == 3:
         result_parts = base
@@ -43,8 +38,7 @@ def generate_phrase(dictionary, word_count=4):
     else:
         raise ValueError("word_count должен быть от 3 до 5")
 
-    words = [random.choice(dictionary[part]) for part in result_parts]
-    return words
+    return [random.choice(dictionary[part]) for part in result_parts]
 
 
 def to_english_layout(word):
@@ -138,50 +132,35 @@ def apply_difficulty(args):
 
 
 def agree_words(words):
-    if len(words) == 5:
-        attribute, subject, adverbial, predicate, obj = words
-    elif len(words) == 4:
-        attribute, subject, predicate, obj = words
-        adverbial = None
-    elif len(words) == 3:
-        subject, predicate, obj = words
-        attribute = adverbial = None
-    else:
-        return words
+    noun = next((w for w in words if w["pos"] == "NOUN"), None)
+    if not noun:
+        return [w["word"] for w in words]
 
-    # Разбор subject с проверкой правильного варианта
-    subj_parse = max(morph.parse(subject), key=lambda p: p.score)
-    # Приводим subject к именительному, если нужно согласовывать атрибут
-    subj_case = subj_parse.tag.case or "nomn"
+    noun_case = noun.get("case") or "nomn"
+    noun_number = noun.get("number") or "sing"
+    noun_gender = noun.get("gender") or "masc"
+    noun_animacy = noun.get("animacy")
 
-    # 1. attribute согласуем по граммемам subject
-    if attribute:
-        attr_parse = max(morph.parse(attribute), key=lambda p: p.score)
-        target_grammemes = {subj_parse.tag.gender, subj_parse.tag.number, subj_case}
-        target_grammemes.discard(None)
-        inflected = attr_parse.inflect(target_grammemes)
-        if inflected:
-            attribute = inflected.word
+    result = []
+    for w in words:
+        pos = w.get("pos")
+        key = None
 
-    # 2. predicate — 3 лицо, ед. число, наст. время (проверяем, что это глагол)
-    pred_parse = max(morph.parse(predicate), key=lambda p: p.score)
-    if pred_parse.tag.POS in {"VERB", "INFN"}:
-        inflected = pred_parse.inflect({"3per", "sing", "pres"})
-        if inflected:
-            predicate = inflected.word
+        if pos in ["ADJF", "PRTF"]:
+            key = (noun_case, noun_number, noun_gender, None)
 
-    # 3. object — склоняем в винительный, учитывая одушевлённость
-    obj_parse = max(morph.parse(obj), key=lambda p: p.score)
-    obj_case = "accs"
-    # Уточняем одушевлённость (anim — одушевлённый)
-    if "anim" in obj_parse.tag:
-        inflected = obj_parse.inflect({obj_case, "anim"})
-    else:
-        inflected = obj_parse.inflect({obj_case})
-    if inflected:
-        obj = inflected.word
+        elif pos == "NOUN" and w != noun:
+            key = ("accs", noun_number, noun_gender, noun_animacy)
 
-    result = [w for w in [attribute, subject, adverbial, predicate, obj] if w]
+        elif pos in ["VERB", "INFN"]:
+            # TODO:
+            key = ("past", noun_number, noun_gender, None)
+
+        if key and str(key) in w.get("inflections", {}):
+            result.append(w["inflections"][str(key)])
+        else:
+            result.append(w["word"])
+
     return result
 
 

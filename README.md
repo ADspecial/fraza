@@ -22,11 +22,22 @@ Simple password generator using passphrase in Russian
 
 ```
 {
-  "subject": ["кот", "мама", "студент"],
-  "object": ["друга", "книгу"],
-  "predicate": ["пишет", "идёт"],
-  "attribute": ["красивый", "старый"],
-  "adverbial": ["быстро", "весело"]
+  "subject": [
+    {
+      "word": "цезарь",
+      "normal_form": "цезарь",
+      "pos": "NOUN",
+      "gender": "masc",
+      "number": "sing",
+      "case": "nomn",
+      "inflections": {
+        "(nomn, sing, masc)": "цезарь",
+        "(accs, sing, masc)": "цезаря",
+        ...
+      }
+    }
+  ],
+  ...
 }
 ```
 
