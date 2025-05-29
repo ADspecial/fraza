@@ -31,12 +31,12 @@ parser.add_argument(
 )
 
 COLORS = [
-    "\033[1;31m",  # Красный
-    "\033[1;32m",  # Зеленый
-    "\033[1;33m",  # Желтый
-    "\033[1;34m",  # Синий
-    "\033[1;35m",  # Магента
-    "\033[1;36m",  # Голубой
+    "\033[1;31m",
+    "\033[1;32m",
+    "\033[1;33m",
+    "\033[1;34m",
+    "\033[1;35m",
+    "\033[1;36m",
 ]
 RESET = "\033[0m"
 SPECIAL_CHARS = set("!@#$%^&*")
@@ -67,15 +67,15 @@ def generate_phrase(dictionary, word_count=4):
     base = ["subject", "predicate", "object"]
 
     if word_count == 3:
-        result_parts = base
+        parts = base
     elif word_count == 4:
-        result_parts = ["attribute"] + base
+        parts = ["attribute"] + base
     elif word_count == 5:
-        result_parts = ["attribute"] + base[:1] + ["adverbial"] + base[1:]
+        parts = ["attribute"] + base[:1] + ["adverbial"] + base[1:]
     else:
-        raise ValueError("word_count должен быть от 3 до 5")
+        raise ValueError("word_count must be between 3 and 5")
 
-    return [random.choice(dictionary[part]) for part in result_parts]
+    return [random.choice(dictionary[part]) for part in parts]
 
 
 def to_english_layout(word):
@@ -91,7 +91,6 @@ def to_english_layout(word):
     en_upper = en.upper()
 
     layout = str.maketrans(ru + ru_upper, en + en_upper)
-
     return word.translate(layout)
 
 
@@ -105,7 +104,7 @@ def build_password(words, args, prefix_number=None):
     processed = []
 
     for word in words:
-        w = word[: args.letter]
+        w = word[: args.letter] if args.letter else word
         if args.capitalized:
             w = w.capitalize()
         processed.append(to_english_layout(w))
@@ -131,34 +130,23 @@ def highlight_phrase(phrase, password, args):
     Also highlights special characters and digits.
     Returns a tuple of (highlighted_phrase, highlighted_password).
     """
-    max_words = (args.word or 4) + 1
+    max_words = args.word or 4
     max_letters = args.letter or 3
 
-    filtered_pos_to_password_idx = [
-        i for i, ch in enumerate(password) if ch not in SPECIAL_CHARS
-    ]
-    pw_filtered = [password[i] for i in filtered_pos_to_password_idx]
+    letter_positions = [i for i, ch in enumerate(password) if ch.isalpha()]
 
     highlighted_words = []
-    pw_idx = 0
+    pw_letter_idx = 0
 
     for w_idx, word in enumerate(phrase[:max_words]):
         color = COLORS[w_idx % len(COLORS)]
-        eng_word = to_english_layout(word[:max_letters])
         word_chars = list(word)
 
         for i in range(min(max_letters, len(word))):
-            if pw_idx >= len(pw_filtered):
+            if pw_letter_idx >= len(letter_positions):
                 break
-
-            try:
-                found_idx = pw_filtered.index(eng_word[i], pw_idx)
-            except ValueError:
-                found_idx = None
-
-            if found_idx is not None:
-                word_chars[i] = f"{color}{word[i]}{RESET}"
-                pw_idx = found_idx + 1
+            word_chars[i] = f"{color}{word[i]}{RESET}"
+            pw_letter_idx += 1
 
         highlighted_words.append("".join(word_chars))
 
@@ -166,28 +154,22 @@ def highlight_phrase(phrase, password, args):
         highlighted_words.extend(phrase[max_words:])
 
     highlighted_password_chars = list(password)
+
     for i, ch in enumerate(password):
         if ch in SPECIAL_CHARS:
             highlighted_password_chars[i] = f"{SPECIAL_CHAR_COLOR}{ch}{RESET}"
         elif ch.isdigit():
             highlighted_password_chars[i] = f"\033[1;32m{ch}{RESET}"
 
-    pw_idx = 0
+    pw_letter_idx = 0
     for w_idx, word in enumerate(phrase[:max_words]):
         color = COLORS[w_idx % len(COLORS)]
-        eng_word = to_english_layout(word[:max_letters])
         for i in range(min(max_letters, len(word))):
-            if pw_idx >= len(pw_filtered):
+            if pw_letter_idx >= len(letter_positions):
                 break
-            try:
-                found_idx = pw_filtered.index(eng_word[i], pw_idx)
-            except ValueError:
-                found_idx = None
-
-            if found_idx is not None:
-                pos = filtered_pos_to_password_idx[found_idx]
-                highlighted_password_chars[pos] = f"{color}{password[pos]}{RESET}"
-                pw_idx = found_idx + 1
+            pos = letter_positions[pw_letter_idx]
+            highlighted_password_chars[pos] = f"{color}{password[pos]}{RESET}"
+            pw_letter_idx += 1
 
     highlighted_password = "".join(highlighted_password_chars)
     highlighted_phrase = " ".join(highlighted_words)
@@ -202,16 +184,15 @@ def save_password(password, filepath=None, phrase=None, args=None):
     Highlights the output if phrase is provided.
     Appends to file if filepath is specified.
     """
-    highlighted_phrase, highlighted_password = highlight_phrase(
-        phrase_view, password, args
-    )
+    highlighted_phrase, highlighted_password = highlight_phrase(phrase, password, args)
     if phrase:
         print(f"{highlighted_phrase} -> {highlighted_password}")
     else:
         print(f"Generated password: {password}")
+
     if filepath:
         with open(filepath, "a", encoding="utf-8") as f:
-            f.write(f"{' '.join(phrase)} -> {password}" + "\n")
+            f.write(f"{' '.join(phrase)} -> {password}\n")
 
 
 def format_phrase(words, args):
@@ -225,6 +206,7 @@ def format_phrase(words, args):
     if args.number:
         number = str(random.randint(10, 99))
         return number, [number] + formatted
+
     return "", formatted
 
 
@@ -263,7 +245,7 @@ def apply_difficulty(args):
         args.wildcard = True
 
     else:
-        raise ValueError(f"Неверный уровень сложности: {args.difficulty}")
+        raise ValueError(f"Invalid difficulty level: {args.difficulty}")
 
 
 def agree_words(words):
@@ -276,9 +258,9 @@ def agree_words(words):
     if not noun:
         return [w["word"] for w in words]
 
-    noun_case = noun.get("case") or "nomn"
-    noun_number = noun.get("number") or "sing"
-    noun_gender = noun.get("gender") or "masc"
+    noun_case = noun.get("case", "nomn")
+    noun_number = noun.get("number", "sing")
+    noun_gender = noun.get("gender", "masc")
     noun_animacy = noun.get("animacy")
 
     result = []
@@ -288,10 +270,8 @@ def agree_words(words):
 
         if pos in ["ADJF", "PRTF"]:
             key = (noun_case, noun_number, noun_gender, None)
-
         elif pos == "NOUN" and w != noun:
             key = ("accs", noun_number, noun_gender, noun_animacy)
-
         elif pos in ["VERB", "INFN"]:
             # TODO: better verb agreement
             key = ("past", noun_number, noun_gender, None)
@@ -306,6 +286,7 @@ def agree_words(words):
 
 if __name__ == "__main__":
     args = parser.parse_args()
+
     if args.difficulty:
         apply_difficulty(args)
 
