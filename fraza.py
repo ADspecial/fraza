@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import argparse
 import random
+import sys
+import os
 import json
 
 parser = argparse.ArgumentParser(description="Password generator")
@@ -22,6 +24,9 @@ parser.add_argument("-p", "--passwords", type=int, default=1)
 
 
 def load_dict(path="tagged_words_full.json"):
+    if getattr(sys, "frozen", False):
+        base_path = sys._MEIPASS
+        path = os.path.join(base_path, path)
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
