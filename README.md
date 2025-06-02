@@ -150,7 +150,7 @@ sudo cp ./dist/fraza /usr/local/bin/
 fraza
 ```
 
-В папке dist лежат готовые бинарники для Windows и Linux — можно использовать без установки Python.
+В `Realeses` лежат готовые бинарники для Windows и Linux — можно использовать без установки Python.
 
 _Дополнительно_ можно сформировать свой словарь с помощью скрипта [gendict.py](gendict.py):
 
