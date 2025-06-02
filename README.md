@@ -99,7 +99,6 @@ _Замечание_- морфологическая связность в фр�
 ### Установка
 
 Используй скрипт [installiation.sh](installiation.sh):
-
 ```
 chmod 755 installiation.sh
 ./installiation.sh
