@@ -4,6 +4,7 @@ import random
 import sys
 import os
 import json
+from zxcvbn import zxcvbn
 
 parser = argparse.ArgumentParser(description="Password generator")
 parser.add_argument(
@@ -29,14 +30,17 @@ parser.add_argument(
 parser.add_argument(
     "-p", "--passwords", type=int, default=1, help="Number of passwords to generate"
 )
+parser.add_argument(
+    "-a", "--analyze", action="store_true", help="Password complexity analysis"
+)
 
 COLORS = [
-    "\033[1;31m",  # Красный
-    "\033[1;32m",  # Зеленый
-    "\033[1;33m",  # Желтый
-    "\033[1;34m",  # Синий
-    "\033[1;35m",  # Магента
-    "\033[1;36m",  # Голубой
+    "\033[1;31m",  # Red
+    "\033[1;32m",  # Green
+    "\033[1;33m",  # Yellow
+    "\033[1;34m",  # Blue
+    "\033[1;35m",  # Magenta
+    "\033[1;36m",  # Light Blue
 ]
 RESET = "\033[0m"
 SPECIAL_CHARS = set("!@#$%^&*")
@@ -205,13 +209,24 @@ def save_password(password, filepath=None, phrase=None, args=None):
     highlighted_phrase, highlighted_password = highlight_phrase(
         phrase_view, password, args
     )
-    if phrase:
-        print(f"{highlighted_phrase} -> {highlighted_password}")
+    if args.analyze:
+        report = analyze_password(password)
+
+    if phrase and args.analyze:
+        print(
+            f"{highlighted_phrase} -> {highlighted_password} | Score: {report['score']}, Crack time: {report['crack_time']}"
+        )
     else:
-        print(f"Generated password: {password}")
+        print(f"{highlighted_phrase} -> {highlighted_password}")
     if filepath:
         with open(filepath, "a", encoding="utf-8") as f:
-            f.write(f"{' '.join(phrase)} -> {password}" + "\n")
+            if args.analyze:
+                f.write(
+                    f"{' '.join(phrase)} -> {password} | Score: {report['score']}, Crack time: {report['crack_time']}"
+                    + "\n"
+                )
+            else:
+                f.write(f"{' '.join(phrase)} -> {password}" + "\n")
 
 
 def format_phrase(words, args):
@@ -251,7 +266,7 @@ def apply_difficulty(args):
 
     elif level == "standart":
         args.word = 4
-        args.letter = 3
+        args.letter = 4
         args.number = True
         args.capitalized = True
 
@@ -302,6 +317,16 @@ def agree_words(words):
             result.append(w["word"])
 
     return result
+
+
+def analyze_password(password: str) -> dict:
+    result = zxcvbn(password)
+    return {
+        "score": result["score"],
+        "crack_time": result["crack_times_display"][
+            "offline_fast_hashing_1e10_per_second"
+        ],
+    }
 
 
 if __name__ == "__main__":
