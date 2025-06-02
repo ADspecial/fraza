@@ -47,7 +47,7 @@ SPECIAL_CHARS = set("!@#$%^&*")
 SPECIAL_CHAR_COLOR = "\033[1;37m"
 
 
-def load_dict(path="tagged_words_full.json"):
+def load_dict(path="data/tagged_words_full.json"):
     """
     Load the JSON dictionary from the specified file path.
 

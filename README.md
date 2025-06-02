@@ -2,6 +2,8 @@
 
 Simple password generator using passphrase in Russian
 
+![preview](media/preview.png)
+
 ### Правила формирования пароля:
 
 - Пароль создается на основе **парольной фразы** на русском языке;
@@ -59,6 +61,30 @@ _Замечание_- морфологическая связность в фр�
 - wc (--wildcard), использовать спецсимвол в пароле, разграничители между словами в парольной фразе по очереди (!, @, #, $, %, ^, &, \*).
 - a (--analyze), произвести оценку сложности пароля, вывод оценки (1-4) и вывод времени времени взлома.
 
+```
+./fraza.py --help
+usage: fraza.py [-h] [-d {1,2,3,simple,standart,complex}] [-f FILE] [-w WORD] [-l LETTER] [-n] [-c] [--wc] [-p PASSWORDS] [-a]
+
+Password generator
+
+options:
+  -h, --help            show this help message and exit
+  -d {1,2,3,simple,standart,complex}, --difficulty {1,2,3,simple,standart,complex}
+                        Уровень сложности: simple|1, standart|2, complex|3
+  -f FILE, --file FILE  File to save generated passwords
+  -w WORD, --word WORD  Number of words in phrase
+  -l LETTER, --letter LETTER
+                        Number of letters from each word
+  -n, --number          Add a number prefix
+  -c, --capitalized     Capitalize words
+
+  --wc, --wildcard      Add special chars between words
+  -p PASSWORDS, --passwords PASSWORDS
+                        Number of passwords to generate
+  -a, --analyze         Password complexity analysis
+
+```
+
 По умолчанию генерация одного простого пароля.
 
 Генерация паролей трех уровней:
@@ -88,7 +114,7 @@ _Замечание_- морфологическая связность в фр�
 52 Беспомощнейшая Проблема Незаметно Развалилась Обслуживание -> 52,tc!Ghj@Ytp#Hfp$J,c | Score: 4, Crack time: centuries
 ```
 
-![Пример вывода в терминале](image.png)
+![Пример вывода в терминале](media/image.png)
 
 ### Оценка сложности пароля
 
@@ -99,6 +125,7 @@ _Замечание_- морфологическая связность в фр�
 ### Установка
 
 Используй скрипт [installiation.sh](installiation.sh):
+
 ```
 chmod 755 installiation.sh
 ./installiation.sh
