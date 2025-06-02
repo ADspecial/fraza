@@ -7,4 +7,5 @@ requires-python = ">=3.8"
 dependencies = [
     "pyinstaller>=6.13.0",
     "pymorphy2>=0.9.1",
+    "zxcvbn>=4.5.0",
 ]
