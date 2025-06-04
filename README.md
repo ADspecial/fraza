@@ -162,7 +162,7 @@ pip3 install --user -r requirements.txt
 5. Собери исполняемый файл:
 
 ```
-pyinstaller --onefile --add-data "tagged_words_full.json:." fraza.py
+pyinstaller --onefile --name fraza --add-data "data/tagged_words_full.json;data" fraza/cli.py
 ```
 
 6. Скопируй бинарник в системный путь для удобного запуска:
