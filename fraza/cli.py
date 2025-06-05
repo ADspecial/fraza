@@ -105,9 +105,7 @@ def highlight_phrase(phrase, password, args):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Генератор паролей на основе согласованных фраз"
-    )
+    parser = argparse.ArgumentParser(description="Генератор паролей на основе фраз")
     parser.add_argument(
         "-d",
         "--difficulty",
@@ -143,7 +141,9 @@ def main():
     parser.add_argument(
         "-a", "--analyze", action="store_true", help="Показать анализ сложности"
     )
-    parser.add_argument("-f", "--file", help="File to save generated passwords")
+    parser.add_argument(
+        "-f", "--file", help="Путь к файлу сохранения сгенерированных паролей"
+    )
 
     args = parser.parse_args()
 

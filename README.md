@@ -61,27 +61,24 @@ _Замечание_- морфологическая связность в фр�
 - a (--analyze), произвести оценку сложности пароля, вывод оценки (1-4) и вывод времени времени взлома.
 
 ```
-./fraza.py --help
-usage: fraza.py [-h] [-d {1,2,3,simple,standart,complex}] [-f FILE] [-w WORD] [-l LETTER] [-n] [-c] [--wc] [-p PASSWORDS] [-a]
+usage: __main__.py [-h] [-d {1,2,3,simple,standart,complex}] [-w WORD] [-l LETTER] [-n] [-c] [--wc] [-p PASSWORDS] [-a] [-f FILE]
 
-Password generator
+Генератор паролей на основе фраз
 
-options:
+optional arguments:
   -h, --help            show this help message and exit
   -d {1,2,3,simple,standart,complex}, --difficulty {1,2,3,simple,standart,complex}
                         Уровень сложности: simple|1, standart|2, complex|3
-  -f FILE, --file FILE  File to save generated passwords
-  -w WORD, --word WORD  Number of words in phrase
+  -w WORD, --word WORD  Количество слов во фразе
   -l LETTER, --letter LETTER
-                        Number of letters from each word
-  -n, --number          Add a number prefix
-  -c, --capitalized     Capitalize words
-
-  --wc, --wildcard      Add special chars between words
+                        Количество букв из каждого слова
+  -n, --number          Добавить числовой префикс
+  -c, --capitalized     Сделать заглавные буквы
+  --wc, --wildcard      Спецсимволы между словами
   -p PASSWORDS, --passwords PASSWORDS
-                        Number of passwords to generate
-  -a, --analyze         Password complexity analysis
-
+                        Количество паролей для генерации
+  -a, --analyze         Показать анализ сложности
+  -f FILE, --file FILE  Путь к файлу сохранения сгенерированных паролей
 ```
 
 По умолчанию генерация одного простого пароля.
