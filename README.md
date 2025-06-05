@@ -1,7 +1,6 @@
 # fraza
 
 Simple password generator using passphrase in Russian
-
 ![preview](media/preview.png)
 
 ### Правила формирования пароля:
@@ -98,11 +97,11 @@ options:
 
 ```
 /d/Code/Python/fraza (dev)
-> ./fraza.py
+> pyhton -m fraza
 необъяснимая духовность принудила перечень -> ytjle[ghbgth
 
 /d/Code/Python/fraza (dev)
-> ./fraza.py -d 3 -p 5 -a
+> pyhton -m fraza -d 3 -p 5 -a
 44 Практическое Проектирование Потом Воспроизвело Здоровье -> 44Ghfr!Ghjt@Gjnj#Djcg$Pljh | Score: 4, Crack time: centuries
 87 Разумный Сосок Сердито Способствовать Торжество -> 87Hfpe!Cjcj@Cthl#Cgjc$Njh; | Score: 4, Crack time: centuries
 25 Международный Диабет Полезно Испугал Сервер -> 25Vt;l!Lbf,@Gjkt#Bcge$Cthd | Score: 4, Crack time: centuries
@@ -110,11 +109,11 @@ options:
 97 Механический Аборт Теоретически Останавливал Рубеж -> 97Vt[f!F,jh@Ntjh#Jcnf$He,t | Score: 4, Crack time: centuries
 
 /d/Code/Python/fraza (dev)
-> ./fraza.py -w 5 -l 3 -c -n --wc -a
+> pyhton -m fraza -w 5 -l 3 -c -n --wc -a
 52 Беспомощнейшая Проблема Незаметно Развалилась Обслуживание -> 52,tc!Ghj@Ytp#Hfp$J,c | Score: 4, Crack time: centuries
 ```
 
-![Пример вывода в терминале](media/image.png)
+![Пример вывода в терминале](media/image_1.png)
 
 ### Оценка сложности пароля
 
