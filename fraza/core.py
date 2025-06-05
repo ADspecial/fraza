@@ -95,15 +95,14 @@ def build_password(
     return password
 
 
-def generate_password(
+def apply_difficulty(
     difficulty: str = "simple",
     word_count: int = None,
     letter_limit: int = None,
     capitalized: bool = False,
     use_number: bool = False,
     wildcard: bool = False,
-    analyze: bool = False,
-) -> dict:
+):
     difficulty_map = {
         "1": "simple",
         "2": "standart",
@@ -117,7 +116,6 @@ def generate_password(
     if not level:
         raise ValueError("Некорректный уровень сложности")
 
-    # Применяем настройки сложности
     if level == "simple":
         word_count = word_count or 4
         letter_limit = letter_limit or 3
@@ -133,6 +131,31 @@ def generate_password(
         capitalized = True
         wildcard = True
 
+    return word_count, letter_limit, capitalized, use_number, wildcard
+
+
+def generate_password(
+    difficulty: str = None,
+    word_count: int = None,
+    letter_limit: int = None,
+    capitalized: bool = False,
+    use_number: bool = False,
+    wildcard: bool = False,
+    analyze: bool = False,
+) -> dict:
+    if (
+        difficulty is None
+        and word_count is None
+        and letter_limit is None
+        and not capitalized
+        and not use_number
+        and not wildcard
+    ):
+        difficulty = "simple"
+    if difficulty is not None:
+        word_count, letter_limit, capitalized, use_number, wildcard = apply_difficulty(
+            difficulty, word_count, letter_limit, capitalized, use_number, wildcard
+        )
     # Загружаем словарь
     dictionary = load_dict()
     raw_words = generate_phrase(dictionary, word_count)

@@ -18,13 +18,13 @@ Simple password generator using passphrase in Russian
 
 где:
 
-- subject - подлежащие ;
+- subject - подлежащее;
 - object - дополнение;
 - predicate - сказуемое;
 - attribute - определение;
 - adverbial - обстоятельство.
 
-Парольная фраза генерируется случайно на основе размеченного [словаря](tagged_words_full.json). Пример структуры словаря представлен ниже:
+Парольная фраза генерируется случайно на основе размеченного [словаря](tagged_words_full.json). Пример структуры словаря представлена ниже:
 
 ```
 {
@@ -47,41 +47,37 @@ Simple password generator using passphrase in Russian
 }
 ```
 
-_Замечание_- морфологическая связность в фразах не полная. Фразы зачастую генерируются не складно.
+**Замечание**- морфологическая связность в фразах не полная. Фразы зачастую генерируются не складно. Например: Конституционного Ларина Повсеместно Нахмурился Имущество.
 
 ### Аргументы
 
-- d (--difficulty), сложность пароля по **уровням** (1:simple, 2:standart, 3:complex);
-- f (--file), путь до файла с паролями на выходе;
-- w (--word), количество слов в фразе (max = 5);
-- l (--letter), количество букв из каждого слова (max = 4);
-- n (--number), добавить число в начало пароля (10-99);
-- c (--capitalized), использовать заглавные буквы в начале слов;
-- wc (--wildcard), использовать спецсимвол в пароле, разграничители между словами в парольной фразе по очереди (!, @, #, $, %, ^, &, \*).
-- a (--analyze), произвести оценку сложности пароля, вывод оценки (1-4) и вывод времени времени взлома.
-
 ```
-usage: __main__.py [-h] [-d {1,2,3,simple,standart,complex}] [-w WORD] [-l LETTER] [-n] [-c] [--wc] [-p PASSWORDS] [-a] [-f FILE]
+usage: __main__.py [-h] [-d {1,2,3,simple,standart,complex}] [-w WORD] [-l LETTER] [-n] [-c] [--wc] [-p PASSWORDS] [-a] [-f FILE] [--cp] [--cpall] [--qr] [--sec SEC] [--no-color]
 
 Генератор паролей на основе фраз
 
 optional arguments:
   -h, --help            show this help message and exit
   -d {1,2,3,simple,standart,complex}, --difficulty {1,2,3,simple,standart,complex}
-                        Уровень сложности: simple|1, standart|2, complex|3
-  -w WORD, --word WORD  Количество слов во фразе
+                        Уровень сложности пароля (1:simple, 2:standart, 3:complex)
+  -w WORD, --word WORD  Количество слов во фразе (max = 5)
   -l LETTER, --letter LETTER
-                        Количество букв из каждого слова
-  -n, --number          Добавить числовой префикс
-  -c, --capitalized     Сделать заглавные буквы
-  --wc, --wildcard      Спецсимволы между словами
+                        Количество букв из каждого слова (max = 4)
+  -n, --number          Добавить числовой префикс (10-99)
+  -c, --capitalized     Использовать заглавные буквы в начале слов
+  --wc, --wildcard      Использовать спецсимволы в пароле, разграничители между словами в парольной фразе по очереди (!, @, #, $)
   -p PASSWORDS, --passwords PASSWORDS
                         Количество паролей для генерации
   -a, --analyze         Показать анализ сложности
   -f FILE, --file FILE  Путь к файлу сохранения сгенерированных паролей
+  --cp, --copy          Скопировать сгенерированные пароли в буфер обмена
+  --cpall, --copyall    Скопировать весь вывод в буфер обмена
+  --qr                  Вывести QR-код сгенерированных паролей
+  --sec SEC             Сохранить сгенерированные пароли в зашифрованный ZIP-файл. Пароль от файла сохраняется в буфер обмена. Нужно указать путь к файлу.
+  --no-color            Отключить цветовую подсветку вывода.
 ```
 
-По умолчанию генерация одного простого пароля.
+По умолчанию генерация одного _simple_ пароля.
 
 Генерация паролей трех уровней:
 | Уровень | Слова | Буквы | Число | Заглавные | Спецсимволы |
@@ -93,29 +89,36 @@ optional arguments:
 ### Примеры использования
 
 ```
-/d/Code/Python/fraza (dev)
 > pyhton -m fraza
-необъяснимая духовность принудила перечень -> ytjle[ghbgth
+дверной обком здравствовал контакт -> ldtj,rplhrjy
 
-/d/Code/Python/fraza (dev)
 > pyhton -m fraza -d 3 -p 5 -a
-44 Практическое Проектирование Потом Воспроизвело Здоровье -> 44Ghfr!Ghjt@Gjnj#Djcg$Pljh | Score: 4, Crack time: centuries
-87 Разумный Сосок Сердито Способствовать Торжество -> 87Hfpe!Cjcj@Cthl#Cgjc$Njh; | Score: 4, Crack time: centuries
-25 Международный Диабет Полезно Испугал Сервер -> 25Vt;l!Lbf,@Gjkt#Bcge$Cthd | Score: 4, Crack time: centuries
-31 Оптическое Приветствие Непременно Перевело Порядок -> 31Jgnb!Ghbd@Ytgh#Gtht$Gjhz | Score: 4, Crack time: centuries
-97 Механический Аборт Теоретически Останавливал Рубеж -> 97Vt[f!F,jh@Ntjh#Jcnf$He,t | Score: 4, Crack time: centuries
+75 Индустриальный Василий Политически Напрягал Багаж -> 75Byle!Dfcb@Gjkb#Yfgh$,fuf | Entropy bits: 85.27, Crack time: centuries
+91 Наидлиннейшее Слияние Любезно Разделось Домик     -> 91Yfbl!Ckbz@K.,t#Hfpl$Ljvb | Entropy bits: 86.37, Crack time: centuries
+84 Ловкий Привод Аналогично Отсутствовал Неприязнь   -> 84Kjdr!Ghbd@Fyfk#Jnce$Ytgh | Entropy bits: 86.37, Crack time: centuries
+76 Некрасивейшее Ружье Налицо Прошло Арест           -> 76Ytrh!He;m@Yfkb#Ghji$Fhtc | Entropy bits: 86.37, Crack time: centuries
+77 Согласный Посреди Совместно Изложил Раздел        -> 77Cjuk!Gjch@Cjdv#Bpkj$Hfpl | Entropy bits: 86.37, Crack time: centuries
 
-/d/Code/Python/fraza (dev)
 > pyhton -m fraza -w 5 -l 3 -c -n --wc -a
-52 Беспомощнейшая Проблема Незаметно Развалилась Обслуживание -> 52,tc!Ghj@Ytp#Hfp$J,c | Score: 4, Crack time: centuries
+86 Огненная Смертность Глубоко Оценила Госпиталь -> 86Juy!Cvt@Uke#Jwt$Ujc | Entropy bits: 69.76, Crack time: centuries
 ```
 
 ![Пример вывода в терминале](media/image_1.png)
 
+![alt text](media/image_2.png)
+
 ### Оценка сложности пароля
 
 Сложность пароля проверяется с помощью библиотеки [zxcvbn](https://github.com/dropbox/zxcvbn.git).
-Вывод итоговой оценки `result.score`- целое число от 0 (очень слабый) до 4 (очень сильный).
+Энтропия рассчитывается по формуле: `Энтропия (бит) = log₂(guesses)`
+Где `guesses` — примерное число попыток подбора.
+Энтропия показывает, сколько бит информации содержит пароль с точки зрения сложности перебора — чем выше, тем безопаснее.
+| Энтропия (бит) | Примерный уровень безопасности |
+| -------------- | --------------------------------------- |
+| 20–40 | Слабый |
+| 40–60 | Средний |
+| 60–80 | Хороший |
+| 80+ | Отличный |
 Оценка времени взлома берётся из параметра `offline_fast_hashing_1e10_per_second` — оффлайн-атака с быстрым хэшированием, предполагающая 10 миллиардов попыток в секунду.
 
 ### Установка
@@ -127,7 +130,7 @@ chmod 755 installiation.sh
 ./installiation.sh
 ```
 
-Или самому произвести следующие действия:
+Или произведи следующие действия:
 
 1. Обновление и установка необходимых инструментов:
 
@@ -155,7 +158,7 @@ cd fraza
 pip3 install --user -r requirements.txt
 ```
 
-5. Собери исполняемый файл:
+5. Собери все в один файл:
 
 ```
 pyinstaller --onefile --name fraza --add-data "data/tagged_words_full.json;data" fraza/__main__.py
@@ -167,15 +170,15 @@ pyinstaller --onefile --name fraza --add-data "data/tagged_words_full.json;data"
 sudo cp ./dist/fraza /usr/local/bin/
 ```
 
-7. Запуск приложение командой:
+7. Запуск приложения в терминале командой:
 
 ```
 fraza
 ```
 
-В папке dist лежат готовые бинарники для Windows и Linux — можно использовать без установки Python.
+В Releases лежат готовые бинарники для Windows и Linux — можно использовать без установки Python.
 
-_Дополнительно_ можно сформировать свой словарь с помощью скрипта [gendict.py](gendict.py):
+**Дополнительно** можно сформировать свой словарь с помощью скрипта [gendict.py](gendict.py):
 
 ```
 python gendict.py [путь_до_списка_слов.txt]

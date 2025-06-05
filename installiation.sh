@@ -42,7 +42,7 @@ if [ -f "requirements.txt" ]; then
 fi
 
 # Собираем исполняемый файл
-pyinstaller --onefile --name fraza --add-data "data/tagged_words_full.json;data" fraza/cli.py || { echo "Ошибка сборки PyInstaller"; exit 1; }
+pyinstaller --onefile --name fraza --add-data "data/tagged_words_full.json;data" fraza/__main__.py || { echo "Ошибка сборки PyInstaller"; exit 1; }
 
 # Копируем в /usr/local/bin с правами
 sudo cp ./dist/fraza /usr/local/bin/ || { echo "Ошибка копирования файла"; exit 1; }

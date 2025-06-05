@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse
-from fraza.core import generate_password
+import pyperclip
+import qrcode_terminal
+import pyzipper
+from fraza.core import generate_password, apply_difficulty
 from fraza.utils import SPECIAL_CHARS, to_english_layout
 
 COLORS = [
@@ -24,6 +27,8 @@ def highlight_phrase(phrase, password, args):
     Also highlights special characters and digits.
     Returns a tuple of (highlighted_phrase, highlighted_password).
     """
+    if args.no_color:
+        return " ".join(phrase), password
     difficulty_map = {
         "1": "simple",
         "2": "standart",
@@ -104,6 +109,17 @@ def highlight_phrase(phrase, password, args):
     return highlighted_phrase, highlighted_password
 
 
+def save_passwords_encrypted_zip(filename, passwords_text):
+    gen = generate_password()
+    zip_password = gen["password"]
+    with pyzipper.AESZipFile(
+        filename, "w", compression=pyzipper.ZIP_DEFLATED, encryption=pyzipper.WZ_AES
+    ) as zf:
+        zf.setpassword(zip_password.encode())
+        zf.writestr("passwords.txt", "".join(passwords_text))
+    return zip_password
+
+
 def main():
     parser = argparse.ArgumentParser(description="Генератор паролей на основе фраз")
     parser.add_argument(
@@ -112,24 +128,29 @@ def main():
         type=str,
         default="simple",
         choices=["1", "2", "3", "simple", "standart", "complex"],
-        help="Уровень сложности: simple|1, standart|2, complex|3",
-    )
-    parser.add_argument("-w", "--word", type=int, help="Количество слов во фразе")
-    parser.add_argument(
-        "-l", "--letter", type=int, help="Количество букв из каждого слова"
+        help="Уровень сложности пароля (1:simple, 2:standart, 3:complex)",
     )
     parser.add_argument(
-        "-n", "--number", action="store_true", help="Добавить числовой префикс"
+        "-w", "--word", type=int, help="Количество слов во фразе (max = 5)"
     )
     parser.add_argument(
-        "-c", "--capitalized", action="store_true", help="Сделать заглавные буквы"
+        "-l", "--letter", type=int, help="Количество букв из каждого слова (max = 4)"
+    )
+    parser.add_argument(
+        "-n", "--number", action="store_true", help="Добавить числовой префикс (10-99)"
+    )
+    parser.add_argument(
+        "-c",
+        "--capitalized",
+        action="store_true",
+        help="Использовать заглавные буквы в начале слов",
     )
     parser.add_argument(
         "--wc",
         "--wildcard",
         action="store_true",
         dest="wildcard",
-        help="Спецсимволы между словами",
+        help="Использовать спецсимволы в пароле, разграничители между словами в парольной фразе по очереди (!, @, #, $)",
     )
     parser.add_argument(
         "-p",
@@ -144,46 +165,142 @@ def main():
     parser.add_argument(
         "-f", "--file", help="Путь к файлу сохранения сгенерированных паролей"
     )
+    parser.add_argument(
+        "--cp",
+        "--copy",
+        action="store_true",
+        dest="copy",
+        help="Скопировать сгенерированные пароли в буфер обмена",
+    )
+    parser.add_argument(
+        "--cpall",
+        "--copyall",
+        action="store_true",
+        dest="copyall",
+        help="Скопировать весь вывод в буфер обмена",
+    )
+    parser.add_argument(
+        "--qr",
+        action="store_true",
+        help="Вывести QR-код сгенерированных паролей",
+    )
+    parser.add_argument(
+        "--sec",
+        help="Сохранить сгенерированные пароли в зашифрованный ZIP-файл. Пароль от файла сохраняется в буфер обмена. Нужно указать путь к файлу.",
+    )
+    parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="Отключить цветовую подсветку вывода",
+    )
 
     args = parser.parse_args()
 
     output_lines = []
+    results = []
+    max_phrase_len = 0
+    first_password = None
+    word_count, letter_limit, capitalized, use_number, wildcard = apply_difficulty(
+        args.difficulty,
+        args.word,
+        args.letter,
+        args.capitalized,
+        args.number,
+        args.wildcard,
+    )
+
+    generation_settings = (
+        f"# Параметры генерации:\n"
+        f"Слов во фразе: {word_count}, "
+        f"Букв из слова: {letter_limit}, "
+        f"Цифры: {'да' if use_number else 'нет'}, "
+        f"Заглавные: {'да' if capitalized else 'нет'}, "
+        f"Спецсимволы: {'да' if wildcard else 'нет'}\n"
+    )
 
     for _ in range(args.passwords):
         result = generate_password(
-            difficulty=args.difficulty,
-            word_count=args.word,
-            letter_limit=args.letter,
-            use_number=args.number,
-            capitalized=args.capitalized,
-            wildcard=args.wildcard,
+            word_count=word_count,
+            letter_limit=letter_limit,
+            use_number=use_number,
+            capitalized=capitalized,
+            wildcard=wildcard,
             analyze=args.analyze,
         )
 
         phrase = result["phrase"]
+        plain_phrase = " ".join(phrase)
         password = result["password"]
-
+        if first_password is None:
+            first_password = password
         highlighted_phrase, highlighted_password = highlight_phrase(
             phrase, password, args
         )
 
-        if args.analyze and "analysis" in result:
-            report = result["analysis"]
-            score = report.get("score", "N/A")
-            crack_time = report.get("crack_time", "N/A")
-            output_line = f"{' '.join(phrase)} -> {password} | Score: {score}, Crack time: {crack_time}\n"
-            print(
-                f"{highlighted_phrase} -> {highlighted_password} | Score: {score}, Crack time: {crack_time}"
-            )
+        max_phrase_len = max(max_phrase_len, len(plain_phrase))
+
+        results.append(
+            {
+                "plain_phrase": plain_phrase,
+                "plain_password": password,
+                "highlighted_phrase": highlighted_phrase,
+                "highlighted_password": highlighted_password,
+                "analysis": result.get("analysis", {}),
+            }
+        )
+
+    for item in results:
+        phrase = item["plain_phrase"]
+        highlighted = item["highlighted_phrase"]
+        pw_plain = item["plain_password"]
+        pw_highlighted = item["highlighted_password"]
+        analysis = item["analysis"]
+        entropy = analysis.get("entropy", float("nan"))
+        crack_time = analysis.get("crack_time", "N/A")
+
+        if args.analyze and analysis:
+            console_line = f"{phrase:<{max_phrase_len}} -> {pw_highlighted:<15} | Entropy bits: {entropy:5.2f}, Crack time: {crack_time}"
+            file_line = f"{phrase:<{max_phrase_len}} -> {pw_plain:<15} | Entropy bits: {entropy:5.2f}, Crack time: {crack_time}"
         else:
-            output_line = f"{' '.join(phrase)} -> {password}\n"
-            print(f"{highlighted_phrase} -> {highlighted_password}")
+            console_line = f"{phrase:<{max_phrase_len}} -> {pw_highlighted}"
+            file_line = f"{phrase:<{max_phrase_len}} -> {pw_plain}"
+        output_lines.append(file_line + "\n")
+        if not args.sec:
+            print(console_line.replace(phrase, highlighted))
 
-        output_lines.append(output_line)
-
-    if args.file:
-        with open(args.file, "a", encoding="utf-8") as f:
-            f.writelines(output_lines)
+    if args.sec:
+        zip_filename = f"{args.sec}.zip"
+        zip_password = save_passwords_encrypted_zip(zip_filename, output_lines)
+        try:
+            pyperclip.copy(zip_password)
+            print(
+                f"[+] Пароли сохранены в зашифрованный файл '{zip_filename}'. Пароль скопирован в буфер обмена."
+            )
+        except pyperclip.PyperclipException:
+            print(
+                "[!] Пароли сохранены, но не удалось скопировать пароль архива в буфер."
+            )
+    else:
+        if args.file:
+            with open(args.file, "a", encoding="utf-8") as f:
+                f.write(generation_settings)
+                f.writelines(output_lines)
+        if args.copy:
+            all_passwords_text = "\n".join(item["plain_password"] for item in results)
+            try:
+                pyperclip.copy(all_passwords_text)
+            except pyperclip.PyperclipException as e:
+                print(f"[!] Не удалось скопировать в буфер: {e}")
+        if args.copyall:
+            try:
+                pyperclip.copy("".join(output_lines))
+            except pyperclip.PyperclipException as e:
+                print(f"[!] Не удалось скопировать в буфер: {e}")
+        if args.qr:
+            for item in results:
+                print(f"QR для пароля: {item['plain_password']}")
+                qrcode_terminal.draw(item["plain_password"])
+                print()
 
 
 if __name__ == "__main__":
