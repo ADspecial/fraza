@@ -1,19 +1,88 @@
 import random
-from .utils import (
-    load_dict,
-    to_english_layout,
-    analyze_password,
-    SPECIAL_CHARS,
-)
-from typing import List
+import os
+import sys
+import json
+import math
+from typing import Dict, List
+
+SPECIAL_CHARS = ["!", "@", "#", "$"]
+
+
+def load_dict(path: str = "data/tagged_words_full.json") -> Dict:
+    """
+    Load a tagged word dictionary from a JSON file.
+
+    Args:
+        path (str): Path to the JSON dictionary file.
+
+    Returns:
+        Dict: Loaded dictionary with tagged words.
+    """
+    if getattr(sys, "frozen", False):
+        base_path = sys._MEIPASS
+        path = os.path.join(base_path, path)
+    else:
+        base_path = os.path.dirname(__file__)
+        path = os.path.abspath(path)
+
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def to_english_layout(word: str) -> str:
+    """
+    Convert a Russian word typed in Cyrillic to its English keyboard equivalent.
+
+    Args:
+        word (str): Word in Russian Cyrillic layout.
+
+    Returns:
+        str: Word converted to English keyboard layout.
+    """
+    ru = "ёйцукенгшщзхъфывапролджэячсмитьбю"
+    en = "`qwertyuiop[]asdfghjkl;'zxcvbnm,."
+
+    ru_upper = ru.upper()
+    en_upper = en.upper()
+
+    layout = str.maketrans(ru + ru_upper, en + en_upper)
+
+    return word.translate(layout)
+
+
+def analyze_password(password: str) -> dict:
+    """
+    Analyze password strength using zxcvbn library.
+
+    Args:
+        password (str): The password string to analyze.
+
+    Returns:
+        dict: Dictionary containing entropy (log2 of guesses) and estimated crack time.
+    """
+    from zxcvbn import zxcvbn
+
+    result = zxcvbn(password)
+    return {
+        "entropy": math.log2(result["guesses"]),
+        "crack_time": result["crack_times_display"][
+            "offline_fast_hashing_1e10_per_second"
+        ],
+    }
 
 
 def generate_phrase(dictionary: dict, word_count: int = 4) -> list:
     """
-    Generate a phrase as a list of words based on the word_count.
+    Generate a grammatically structured phrase from a dictionary.
 
-    The phrase structure depends on word_count (3 to 5).
-    Selects random words from dictionary parts accordingly.
+    Structure depends on word_count (3–5) using parts like subject, predicate, etc.
+
+    Args:
+        dictionary (dict): Word lists grouped by parts of speech.
+        word_count (int): Number of words in the phrase (3–5).
+
+    Returns:
+        list: List of selected words forming a phrase.
     """
     base = ["subject", "predicate", "object"]
 
@@ -31,9 +100,16 @@ def generate_phrase(dictionary: dict, word_count: int = 4) -> list:
 
 def agree_words(words: list) -> list:
     """
-    Adjust words for grammatical agreement based on the main noun's attributes.
+    Inflect words to match the main noun's grammatical features.
 
-    Returns a list of properly inflected words where possible.
+    Adjusts adjectives, verbs, and secondary nouns to agree with the main noun
+    by case, number, gender, and animacy when possible.
+
+    Args:
+        words (list): List of word dicts with POS tags and inflection options.
+
+    Returns:
+        list: List of inflected word strings.
     """
     noun = next((w for w in words if w["pos"] == "NOUN"), None)
     if not noun:
@@ -74,6 +150,21 @@ def build_password(
     wildcard: bool = False,
     prefix_number: str = "",
 ) -> str:
+    """
+    Build a password from a list of words with optional formatting.
+
+    Applies letter limits, capitalization, special char separators, and a numeric prefix.
+
+    Args:
+        words (List[str]): Words to include in the password.
+        letter_limit (int): Max letters per word.
+        capitalized (bool): Capitalize each word if True.
+        wildcard (bool): Insert special characters between words if True.
+        prefix_number (str): Number to prepend to the password.
+
+    Returns:
+        str: Final formatted password.
+    """
     processed = []
 
     for word in words:
@@ -103,6 +194,22 @@ def apply_difficulty(
     use_number: bool = False,
     wildcard: bool = False,
 ):
+    """
+    Apply preset password rules based on difficulty level.
+
+    Returns adjusted parameters for word count, letter limit, and formatting options.
+
+    Args:
+        difficulty (str): Difficulty level ('simple', 'standart', 'complex').
+        word_count (int): Optional custom word count.
+        letter_limit (int): Optional custom letter limit.
+        capitalized (bool): Capitalize words if True.
+        use_number (bool): Prepend a number if True.
+        wildcard (bool): Use special character separators if True.
+
+    Returns:
+        Tuple: (word_count, letter_limit, capitalized, use_number, wildcard)
+    """
     difficulty_map = {
         "1": "simple",
         "2": "standart",
@@ -143,6 +250,11 @@ def generate_password(
     wildcard: bool = False,
     analyze: bool = False,
 ) -> dict:
+    """
+    Generate a password and phrase based on difficulty and customization options.
+
+    Returns a dictionary with the password, phrase, and optionally analysis.
+    """
     if (
         difficulty is None
         and word_count is None
@@ -156,7 +268,6 @@ def generate_password(
         word_count, letter_limit, capitalized, use_number, wildcard = apply_difficulty(
             difficulty, word_count, letter_limit, capitalized, use_number, wildcard
         )
-    # Загружаем словарь
     dictionary = load_dict()
     raw_words = generate_phrase(dictionary, word_count)
     agreed_words = agree_words(raw_words)
