@@ -139,6 +139,33 @@ def save_passwords_encrypted_zip(filename: str, passwords_text: List[str]) -> st
     return zip_password
 
 
+def limited_letters(value):
+    ivalue = int(value)
+    if ivalue < 1 or ivalue > 4:
+        raise argparse.ArgumentTypeError(
+            f"Количество букв должно быть от 1 до 4, получено {value}"
+        )
+    return ivalue
+
+
+def limited_passwords(value):
+    ivalue = int(value)
+    if ivalue < 1 or ivalue > 9999:
+        raise argparse.ArgumentTypeError(
+            f"Количество паролей должно быть от 1 до 9999, получено {value}"
+        )
+    return ivalue
+
+
+def limited_words(value):
+    ivalue = int(value)
+    if ivalue < 1 or ivalue > 5:
+        raise argparse.ArgumentTypeError(
+            f"Количество слов должно быть от 1 до 5, получено {value}"
+        )
+    return ivalue
+
+
 def main():
     parser = argparse.ArgumentParser(description="Генератор паролей на основе фраз")
     parser.add_argument(
@@ -150,10 +177,13 @@ def main():
         help="Уровень сложности пароля (1|simple, 2|standart, 3|complex)",
     )
     parser.add_argument(
-        "-w", "--word", type=int, help="Количество слов во фразе (max = 5)"
+        "-w", "--word", type=limited_words, help="Количество слов во фразе (max = 5)"
     )
     parser.add_argument(
-        "-l", "--letter", type=int, help="Количество букв из каждого слова (max = 4)"
+        "-l",
+        "--letter",
+        type=limited_letters,
+        help="Количество букв из каждого слова (max = 4)",
     )
     parser.add_argument(
         "-n", "--number", action="store_true", help="Добавить числовой префикс (10-99)"
@@ -174,7 +204,7 @@ def main():
     parser.add_argument(
         "-p",
         "--passwords",
-        type=int,
+        type=limited_passwords,
         default=1,
         help="Количество паролей для генерации",
     )
