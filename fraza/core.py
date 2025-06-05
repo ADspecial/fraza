@@ -1,5 +1,5 @@
 import random
-from utils import (
+from .utils import (
     load_dict,
     to_english_layout,
     analyze_password,
@@ -9,16 +9,24 @@ from typing import List
 
 
 def generate_phrase(dictionary: dict, word_count: int = 4) -> list:
+    """
+    Generate a phrase as a list of words based on the word_count.
+
+    The phrase structure depends on word_count (3 to 5).
+    Selects random words from dictionary parts accordingly.
+    """
     base = ["subject", "predicate", "object"]
+
     if word_count == 3:
-        parts = base
+        result_parts = base
     elif word_count == 4:
-        parts = ["attribute"] + base
+        result_parts = ["attribute"] + base
     elif word_count == 5:
-        parts = ["attribute", "subject", "adverbial", "predicate", "object"]
+        result_parts = ["attribute"] + base[:1] + ["adverbial"] + base[1:]
     else:
         raise ValueError("word_count должен быть от 3 до 5")
-    return [random.choice(dictionary[part]) for part in parts]
+
+    return [random.choice(dictionary[part]) for part in result_parts]
 
 
 def agree_words(words: list) -> list:
@@ -67,6 +75,7 @@ def build_password(
     prefix_number: str = "",
 ) -> str:
     processed = []
+
     for word in words:
         w = word[:letter_limit]
         if capitalized:
@@ -80,7 +89,10 @@ def build_password(
     else:
         password = "".join(processed)
 
-    return prefix_number + password
+    if prefix_number:
+        password = prefix_number + password
+
+    return password
 
 
 def generate_password(
@@ -127,11 +139,10 @@ def generate_password(
     agreed_words = agree_words(raw_words)
 
     prefix_number = str(random.randint(10, 99)) if use_number else ""
-    phrase = (
-        [prefix_number] + [w.capitalize() if capitalized else w for w in agreed_words]
-        if use_number
-        else agreed_words
-    )
+    phrase = [w.capitalize() if capitalized else w for w in agreed_words]
+    if use_number:
+        phrase = [prefix_number] + phrase
+
     password = build_password(
         agreed_words, letter_limit, capitalized, wildcard, prefix_number
     )
