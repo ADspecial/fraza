@@ -1,5 +1,4 @@
 import random
-import os
 import sys
 import json
 import math
@@ -8,30 +7,29 @@ from typing import Dict, List
 SPECIAL_CHARS = ["!", "@", "#", "$"]
 
 
-def load_dict(path: str = "data/tagged_words_full.json") -> Dict:
-    """
-    Load a tagged word dictionary from a JSON file.
+try:
+    from importlib.resources import files
+except ImportError:
+    from importlib_resources import files
 
-    Args:
-        path (str): Path to the JSON dictionary file.
 
-    Returns:
-        Dict: Loaded dictionary with tagged words.
-    """
+def load_dict() -> Dict:
     if getattr(sys, "frozen", False):
+        import os
+
         base_path = sys._MEIPASS
-        path = os.path.join(base_path, path)
+        path = os.path.join(base_path, "data", "tagged_words_full.json")
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
     else:
-        base_path = os.path.dirname(__file__)
-        path = os.path.abspath(path)
-
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        path = files("fraza.data").joinpath("tagged_words_full.json")
+        with path.open("r", encoding="utf-8") as f:
+            return json.load(f)
 
 
-def load_dict_cached(path="data/tagged_words_full.json"):
+def load_dict_cached():
     if not hasattr(load_dict_cached, "_cache"):
-        load_dict_cached._cache = load_dict(path)
+        load_dict_cached._cache = load_dict()
     return load_dict_cached._cache
 
 
