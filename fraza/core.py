@@ -29,6 +29,12 @@ def load_dict(path: str = "data/tagged_words_full.json") -> Dict:
         return json.load(f)
 
 
+def load_dict_cached(path="data/tagged_words_full.json"):
+    if not hasattr(load_dict_cached, "_cache"):
+        load_dict_cached._cache = load_dict(path)
+    return load_dict_cached._cache
+
+
 def to_english_layout(word: str) -> str:
     """
     Convert a Russian word typed in Cyrillic to its English keyboard equivalent.
@@ -84,15 +90,14 @@ def generate_phrase(dictionary: dict, word_count: int = 4) -> list:
     Returns:
         list: List of selected words forming a phrase.
     """
-    base = ["subject", "predicate", "object"]
 
-    if word_count == 3:
-        result_parts = base
-    elif word_count == 4:
-        result_parts = ["attribute"] + base
-    elif word_count == 5:
-        result_parts = ["attribute"] + base[:1] + ["adverbial"] + base[1:]
-    else:
+    structures = {
+        3: ["subject", "predicate", "object"],
+        4: ["attribute", "subject", "predicate", "object"],
+        5: ["attribute", "subject", "adverbial", "predicate", "object"],
+    }
+    result_parts = structures.get(word_count)
+    if not result_parts:
         raise ValueError("word_count должен быть от 3 до 5")
 
     return [random.choice(dictionary[part]) for part in result_parts]
@@ -135,10 +140,9 @@ def agree_words(words: list) -> list:
             # TODO: better verb agreement
             key = ("past", noun_number, noun_gender, None)
 
-        if key and str(key) in w.get("inflections", {}):
-            result.append(w["inflections"][str(key)])
-        else:
-            result.append(w["word"])
+        inflections = w.get("inflections", {})
+        form = inflections.get(str(key), w["word"])
+        result.append(form)
 
     return result
 
@@ -268,7 +272,7 @@ def generate_password(
         word_count, letter_limit, capitalized, use_number, wildcard = apply_difficulty(
             difficulty, word_count, letter_limit, capitalized, use_number, wildcard
         )
-    dictionary = load_dict()
+    dictionary = load_dict_cached()
     raw_words = generate_phrase(dictionary, word_count)
     agreed_words = agree_words(raw_words)
 

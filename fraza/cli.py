@@ -4,6 +4,9 @@ import argparse
 import pyperclip
 import qrcode_terminal
 import pyzipper
+import os
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from math import ceil
 from typing import List, Tuple, Any
 from fraza.core import (
     generate_password,
@@ -150,7 +153,7 @@ def limited_letters(value):
 
 def limited_passwords(value):
     ivalue = int(value)
-    if ivalue < 1 or ivalue > 9999:
+    if ivalue < 1 or ivalue > 10000:
         raise argparse.ArgumentTypeError(
             f"Количество паролей должно быть от 1 до 9999, получено {value}"
         )
@@ -164,6 +167,40 @@ def limited_words(value):
             f"Количество слов должно быть от 1 до 5, получено {value}"
         )
     return ivalue
+
+
+def generate_password_batch(
+    batch_size, word_count, letter_limit, use_number, capitalized, wildcard, analyze
+):
+    return [
+        generate_password(
+            word_count=word_count,
+            letter_limit=letter_limit,
+            use_number=use_number,
+            capitalized=capitalized,
+            wildcard=wildcard,
+            analyze=analyze,
+        )
+        for _ in range(batch_size)
+    ]
+
+
+def highlight_batch(items, args):
+    result = []
+    for item in items:
+        highlighted_phrase, highlighted_password = highlight_phrase(
+            item["phrase"], item["password"], args
+        )
+        result.append(
+            {
+                "plain_phrase": " ".join(item["phrase"]),
+                "plain_password": item["password"],
+                "highlighted_phrase": highlighted_phrase,
+                "highlighted_password": highlighted_password,
+                "analysis": item.get("analysis", {}),
+            }
+        )
+    return result
 
 
 def main():
@@ -245,10 +282,15 @@ def main():
 
     args = parser.parse_args()
 
-    output_lines = []
-    results = []
-    max_phrase_len = 0
-    first_password = None
+    max_console_output = 100
+    max_file_output = 10000
+
+    if args.passwords > max_file_output:
+        args.passwords = max_file_output
+
+    if args.passwords > max_console_output and not args.no_color:
+        args.no_color = True
+
     word_count, letter_limit, capitalized, use_number, wildcard = apply_difficulty(
         args.difficulty,
         args.word,
@@ -267,38 +309,51 @@ def main():
         f"Спецсимволы: {'да' if wildcard else 'нет'}\n"
     )
 
-    for _ in range(args.passwords):
-        result = generate_password(
-            word_count=word_count,
-            letter_limit=letter_limit,
-            use_number=use_number,
-            capitalized=capitalized,
-            wildcard=wildcard,
-            analyze=args.analyze,
-        )
+    batch_size = 20
+    total = args.passwords
+    batches = ceil(total / batch_size)
+    if args.passwords < 20:
+        worker_count = 1
+    elif args.passwords < 100:
+        worker_count = min(2, os.cpu_count())
+    else:
+        worker_count = min(4, os.cpu_count())
 
-        phrase = result["phrase"]
-        plain_phrase = " ".join(phrase)
-        password = result["password"]
-        if first_password is None:
-            first_password = password
-        highlighted_phrase, highlighted_password = highlight_phrase(
-            phrase, password, args
-        )
+    raw_results = []
 
-        max_phrase_len = max(max_phrase_len, len(plain_phrase))
+    with ProcessPoolExecutor(max_workers=worker_count) as executor:
+        futures = [
+            executor.submit(
+                generate_password_batch,
+                min(batch_size, total - i * batch_size),
+                word_count,
+                letter_limit,
+                use_number,
+                capitalized,
+                wildcard,
+                args.analyze,
+            )
+            for i in range(batches)
+        ]
+        for future in as_completed(futures):
+            raw_results.extend(future.result())
 
-        results.append(
-            {
-                "plain_phrase": plain_phrase,
-                "plain_password": password,
-                "highlighted_phrase": highlighted_phrase,
-                "highlighted_password": highlighted_password,
-                "analysis": result.get("analysis", {}),
-            }
-        )
+    # === Параллельная подсветка ===
+    results = []
+    max_phrase_len = 0
 
-    for item in results:
+    results = highlight_batch(raw_results, args)
+    max_phrase_len = max(len(item["plain_phrase"]) for item in results)
+
+    # === Вывод и сохранение ===
+    output_lines = []
+    for idx, item in enumerate(results):
+        if idx >= max_console_output and not args.file and not args.sec:
+            print(
+                f"[!] Вывод ограничен {max_console_output} паролями. Остальные не выводятся в консоль."
+            )
+            break
+
         phrase = item["plain_phrase"]
         highlighted = item["highlighted_phrase"]
         pw_plain = item["plain_password"]
@@ -313,8 +368,9 @@ def main():
         else:
             console_line = f"{phrase:<{max_phrase_len}} -> {pw_highlighted}"
             file_line = f"{phrase:<{max_phrase_len}} -> {pw_plain}"
+
         output_lines.append(file_line + "\n")
-        if not args.sec:
+        if not args.sec and (idx < max_console_output):
             print(console_line.replace(phrase, highlighted))
 
     if args.sec:
