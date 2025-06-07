@@ -1,7 +1,7 @@
-import random
-import sys
 import json
 import math
+import random
+import sys
 from typing import Dict, List
 
 SPECIAL_CHARS = ["!", "@", "#", "$"]

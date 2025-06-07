@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
 import argparse
-import pyperclip
-import qrcode_terminal
-import pyzipper
 import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from math import ceil
-from typing import List, Tuple, Any
+from typing import Any, List, Tuple
+
+import pyperclip
+import pyzipper
+import qrcode_terminal
+
 from fraza.core import (
-    generate_password,
-    apply_difficulty,
     SPECIAL_CHARS,
+    apply_difficulty,
+    generate_password,
     to_english_layout,
 )
 
