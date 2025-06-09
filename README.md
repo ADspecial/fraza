@@ -124,15 +124,6 @@ optional arguments:
 
 ### Установка
 
-Используй скрипт [installiation.sh](installiation.sh):
-
-```
-chmod 755 installiation.sh
-./installiation.sh
-```
-
-Или произведи следующие действия:
-
 1. Обновление и установка необходимых инструментов:
 
 ```
@@ -140,44 +131,17 @@ sudo apt update
 sudo apt install git python3 python3-pip
 ```
 
-2. Установи Pyinstaller:
+2. Установка пакета Fraza:
 
 ```
-pip3 install --user pyinstaller
+pip3 install --user ADspecial/fraza
 ```
 
-3. Клонируй репозиторий:
-
-```
-git clone https://github.com/ADspecial/fraza.git
-cd fraza
-```
-
-4. Установи зависимости:
-
-```
-pip3 install --user -r requirements.txt
-```
-
-5. Собери все в один файл:
-
-```
-pyinstaller --onefile --name fraza --add-data "data/tagged_words_full.json;data" fraza/__main__.py
-```
-
-6. Скопируй бинарник в системный путь для удобного запуска:
-
-```
-sudo cp ./dist/fraza /usr/local/bin/
-```
-
-7. Запуск приложения в терминале командой:
+3. Запуск приложения в терминале командой:
 
 ```
 fraza
 ```
-
-В Releases лежат готовые бинарники для Windows и Linux — можно использовать без установки Python.
 
 **Дополнительно** можно сформировать свой словарь с помощью скрипта [gendict.py](gendict.py):
 

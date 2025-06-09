@@ -11,7 +11,6 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pyinstaller>=6.13.0",
     "pymorphy2>=0.9.1",
     "pyperclip>=1.9.0",
     "pyzipper>=0.3.6",
