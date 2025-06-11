@@ -1,2 +1,0 @@
-[console_scripts]
-fraza = fraza.cli:main
