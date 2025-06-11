@@ -1,0 +1,15 @@
+LICENSE
+README.md
+pyproject.toml
+src/fraza/__init__.py
+src/fraza/__main__.py
+src/fraza/cli.py
+src/fraza/core.py
+src/fraza.egg-info/PKG-INFO
+src/fraza.egg-info/SOURCES.txt
+src/fraza.egg-info/dependency_links.txt
+src/fraza.egg-info/entry_points.txt
+src/fraza.egg-info/requires.txt
+src/fraza.egg-info/top_level.txt
+src/fraza/data/gendict.py
+src/fraza/data/tagged_words_full.json

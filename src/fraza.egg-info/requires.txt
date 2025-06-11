@@ -1,0 +1,6 @@
+pymorphy2>=0.9.1
+pyperclip>=1.9.0
+pyzipper>=0.3.6
+qrcode-terminal>=0.8
+zxcvbn>=4.5.0
+importlib_resources>=5.0

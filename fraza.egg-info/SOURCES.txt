@@ -1,0 +1,12 @@
+LICENSE
+README.md
+pyproject.toml
+fraza/__init__.py
+fraza/cli.py
+fraza/core.py
+fraza.egg-info/PKG-INFO
+fraza.egg-info/SOURCES.txt
+fraza.egg-info/dependency_links.txt
+fraza.egg-info/entry_points.txt
+fraza.egg-info/requires.txt
+fraza.egg-info/top_level.txt
