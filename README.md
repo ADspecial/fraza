@@ -134,24 +134,24 @@ sudo apt install git python3 python3-pip pipx
 
 2. Установка пакета Fraza:
 
-2.1. Рекомендуется использовать pipx
+   - Рекомендуется использовать pipx
 
-```
-pipx ensurepath
-sudo pipx ensurepath --global # optional to allow pipx actions with --global argument
-pipx install fraza
-```
+   ```
+   pipx ensurepath
+   sudo pipx ensurepath --global # optional to allow pipx actions with --global argument
+   pipx install fraza
+   ```
 
-После установки перезапустите терминал, чтобы fraza стала доступна в командной строке.
-Если команда не находится, добавьте путь до fraza в ~/.bashrc или ~/.zshrc.
+   После установки перезапустите терминал, чтобы fraza стала доступна в командной строке.
+   Если команда не находится, добавьте путь до fraza в ~/.bashrc или ~/.zshrc.
 
-2.2. Альтернативный способ (если нужен pip):
+   - Альтернативный способ (если нужен pip):
 
-```
-python3 -m venv .venv
-source .venv/bin/activate
-pip install fraza
-```
+   ```
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install fraza
+   ```
 
 3. Запуск:
 
