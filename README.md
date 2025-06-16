@@ -129,7 +129,7 @@ optional arguments:
 
 ```
 sudo apt update
-sudo apt install git python3 python3-pip pipx
+sudo apt install git python3 python3-pip pipx xclip
 ```
 
 2. Установка пакета Fraza:
