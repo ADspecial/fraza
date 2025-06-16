@@ -14,7 +14,7 @@ Simple password generator using passphrase in Russian
 
 ### Правила генерации парольной фразы:
 
-`password phrase = (attribute)+ subject + (adverbial) + predicate + object`
+`password phrase = (attribute) + subject + (adverbial) + predicate + object`
 
 где:
 
@@ -52,7 +52,8 @@ Simple password generator using passphrase in Russian
 ### Аргументы
 
 ```
-usage: __main__.py [-h] [-d {1,2,3,simple,standart,complex}] [-w WORD] [-l LETTER] [-n] [-c] [--wc] [-p PASSWORDS] [-a] [-f FILE] [--cp] [--cpall] [--qr] [--sec SEC] [--no-color]
+usage: fraza [-h] [-d {1,2,3,simple,standart,complex}] [-w WORD] [-l LETTER] [-n] [-c] [--wc] [-p PASSWORDS] [-a]
+             [-f FILE] [--cp] [--cpall] [--qr] [--sec SEC] [--no-color]
 
 Генератор паролей на основе фраз
 
@@ -89,17 +90,17 @@ optional arguments:
 ### Примеры использования
 
 ```
-> pyhton -m fraza
+> fraza
 дверной обком здравствовал контакт -> ldtj,rplhrjy
 
-> pyhton -m fraza -d 3 -p 5 -a
+> fraza -d 3 -p 5 -a
 75 Индустриальный Василий Политически Напрягал Багаж -> 75Byle!Dfcb@Gjkb#Yfgh$,fuf | Entropy bits: 85.27, Crack time: centuries
 91 Наидлиннейшее Слияние Любезно Разделось Домик     -> 91Yfbl!Ckbz@K.,t#Hfpl$Ljvb | Entropy bits: 86.37, Crack time: centuries
 84 Ловкий Привод Аналогично Отсутствовал Неприязнь   -> 84Kjdr!Ghbd@Fyfk#Jnce$Ytgh | Entropy bits: 86.37, Crack time: centuries
 76 Некрасивейшее Ружье Налицо Прошло Арест           -> 76Ytrh!He;m@Yfkb#Ghji$Fhtc | Entropy bits: 86.37, Crack time: centuries
 77 Согласный Посреди Совместно Изложил Раздел        -> 77Cjuk!Gjch@Cjdv#Bpkj$Hfpl | Entropy bits: 86.37, Crack time: centuries
 
-> pyhton -m fraza -w 5 -l 3 -c -n --wc -a
+> fraza -w 5 -l 3 -c -n --wc -a
 86 Огненная Смертность Глубоко Оценила Госпиталь -> 86Juy!Cvt@Uke#Jwt$Ujc | Entropy bits: 69.76, Crack time: centuries
 ```
 
@@ -134,7 +135,7 @@ sudo apt install git python3 python3-pip
 2. Установка пакета Fraza:
 
 ```
-pip3 install --user ADspecial/fraza
+pip install fraza
 ```
 
 3. Запуск приложения в терминале командой:
@@ -143,18 +144,14 @@ pip3 install --user ADspecial/fraza
 fraza
 ```
 
+Запуск в термналах без поддержки **ANSI escape codes** (cmd, PowerShell):
+```
+fraza --no-color
+```
+Также без поддеркжки ANSI escape codes некорректно выводится qr-коды паролей.
+
 **Дополнительно** можно сформировать свой словарь с помощью скрипта [gendict.py](gendict.py):
 
 ```
 python gendict.py [путь_до_списка_слов.txt]
 ```
-
-### Что стоит сделать
-
-проблема: медленная генерация большого количества паролей
-
-использование параллелизма
-При генерации большого количества паролей сделать --no-color
-Ограничение количества генерации паролей при выводе в консоль (max = 100)
-При сохранении в файл (max = 10000)
-При использовании QR (max = 20)
