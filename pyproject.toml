@@ -1,6 +1,6 @@
 [project]
 name = "fraza"
-version = "0.1.1"
+version = "0.2.0"
 description = "Simple password generator using passphrase in Russian"
 authors = [{ name = "ADspecial", email = "is@dlekontsev.ru" }]
 readme = "README.md"
