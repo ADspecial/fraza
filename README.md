@@ -123,14 +123,45 @@ optional arguments:
 
 Оценка времени взлома берётся из параметра `offline_fast_hashing_1e10_per_second` — оффлайн-атака с быстрым хэшированием, предполагающая 10 миллиардов попыток в секунду.
 
-### Установка
+### Установка (Linux)
 
 1. Обновление и установка необходимых инструментов:
 
 ```
 sudo apt update
-sudo apt install git python3 python3-pip
+sudo apt install git python3 python3-pip pipx
 ```
+
+2. Установка пакета Fraza:
+
+2.1. Рекомендуется использовать pipx
+
+```
+pipx ensurepath
+sudo pipx ensurepath --global # optional to allow pipx actions with --global argument
+pipx install fraza
+```
+
+После установки перезапустите терминал, чтобы fraza стала доступна в командной строке.
+Если команда не находится, добавьте путь до fraza в ~/.bashrc или ~/.zshrc.
+
+2.2. Альтернативный способ (если нужен pip):
+
+```
+python3 -m venv .venv
+source .venv/bin/activate
+pip install fraza
+```
+
+3. Запуск:
+
+```
+fraza
+```
+
+### Установка (Windows)
+
+1. Установите Python.
 
 2. Установка пакета Fraza:
 
@@ -138,17 +169,15 @@ sudo apt install git python3 python3-pip
 pip install fraza
 ```
 
-3. Запуск приложения в терминале командой:
+Запуск в термналах без поддержки **ANSI escape codes** (cmd.exe, PowerShell):
 
-```
-fraza
-```
-
-Запуск в термналах без поддержки **ANSI escape codes** (cmd, PowerShell):
 ```
 fraza --no-color
 ```
-Также без поддеркжки ANSI escape codes некорректно выводится qr-коды паролей.
+
+Также в таких терминалах некорректно выводится QR-коды паролей.
+
+---
 
 **Дополнительно** можно сформировать свой словарь с помощью скрипта [gendict.py](gendict.py):
 
